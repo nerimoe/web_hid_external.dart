@@ -6,7 +6,8 @@ class Hid implements InteropWrapper<_Hid> {
   Hid._(this._interop);
 
   Future<List<HidDevice>> requestDevice([RequestOptions? options]) {
-    var promise = _interop.requestDevice(options ?? RequestOptions(filters: []));
+    var promise =
+        _interop.requestDevice(options ?? RequestOptions(filters: []));
     return promiseToFuture(promise).then((value) {
       return (value as List).map((e) => HidDevice._(e)).toList();
     });
@@ -49,10 +50,12 @@ class _Hid implements Interop {
   external Object getDevices();
 
   /// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener
-  external void addEventListener(String type, EventListener? listener, [bool? useCapture]);
+  external void addEventListener(String type, EventListener? listener,
+      [bool? useCapture]);
 
   /// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener
-  external void removeEventListener(String type, EventListener? listener, [bool? useCapture]);
+  external void removeEventListener(String type, EventListener? listener,
+      [bool? useCapture]);
 }
 
 @JS()
@@ -89,23 +92,55 @@ class HidDevice extends Delegate<EventTarget> {
 
   bool get opened => getProperty('opened');
 
+  dynamic get vendorId {
+    var property = getProperty('vendorId');
+    return property;
+  }
+
+  dynamic get productId {
+    var property = getProperty('productId');
+    return property;
+  }
+
+  dynamic get productName {
+    var property = getProperty('productName');
+    return property;
+  }
+
+  dynamic get collections {
+    var property = getProperty('collections');
+    return property;
+  }
+
   Future<void> sendReport(int requestId, TypedData data) {
     var promise = callMethod('sendReport', [requestId, data]);
     return promiseToFuture(promise);
   }
 
-  /// FIXME allowInterop
-  void subscribeInputReport(EventListener listener) {
-    delegate.addEventListener('inputreport', listener);
+  void subscribeInputReport(ReportListener listener) {
+    delegate.addEventListener('inputreport',
+        allowInterop((Event event) => {_onInputReport(event, listener)}));
   }
 
-  /// FIXME allowInterop
-  void unsubscribeInputReport(EventListener listener) {
-    delegate.removeEventListener('inputreport', listener);
+  void unsubscribeInputReport(ReportListener listener) {
+    delegate.removeEventListener('inputreport',
+        allowInterop((Event event) => {_onInputReport(event, listener)}));
   }
 
   Future<void> sendFeatureReport(int requestId, TypedData data) {
     var promise = callMethod('sendFeatureReport', [requestId, data]);
     return promiseToFuture(promise);
+  }
+
+  void _onInputReport(Event event, ReportListener listener) {
+    var dataView = js_util.getProperty(event, "data");
+    var reportId = js_util.getProperty(event, "reportId");
+    var len = js_util.getProperty(dataView, "byteLength");
+    List<int> data = [];
+    for (int i = 0; i < len; i++) {
+      var byte = js_util.callMethod(dataView, "getUint8", [i]);
+      data.add(byte);
+    }
+    listener(HidReport(reportId, data));
   }
 }
