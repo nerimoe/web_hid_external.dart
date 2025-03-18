@@ -22,22 +22,22 @@ class Hid implements InteropWrapper<_Hid> {
 
   /// FIXME allowInterop
   void subscribeConnect(EventListener listener) {
-    _interop.addEventListener('connect', listener);
+    _interop.addEventListener('connect', allowInterop(listener));
   }
 
   /// FIXME allowInterop
   void unsubscribeConnect(EventListener listener) {
-    _interop.removeEventListener('connect', listener);
+    _interop.removeEventListener('connect', allowInterop(listener));
   }
 
   /// FIXME allowInterop
   void subscribeDisconnect(EventListener listener) {
-    _interop.addEventListener('disconnect', listener);
+    _interop.addEventListener('disconnect', allowInterop(listener));
   }
 
   /// FIXME allowInterop
   void unsubscribeDisconnect(EventListener listener) {
-    _interop.removeEventListener('disconnect', listener);
+    _interop.removeEventListener('disconnect', allowInterop(listener));
   }
 }
 
